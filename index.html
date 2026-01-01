@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bazos REMBG - Odstránenie pozadia</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+        .upload-area.drag-over {
+            border-color: #764ba2;
+            background: #e8ebf8;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .upload-text {
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .upload-hint {
+            color: #999;
+            font-size: 12px;
+        }
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .preview-section {
+            display: none;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .preview-section.active {
+            display: block;
+        }
+        .preview-images {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .image-box {
+            background: #f5f5f5;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .image-label {
+            padding: 10px;
+            background: #e0e0e0;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+        .image-box img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .status.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .download-btn {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .download-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Bazos REMBG</h1>
+        <p class="subtitle">Automatické odstránenie pozadia z fotiek</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📸</div>
+            <div class="upload-text">Klikni alebo presuň obrázok sem</div>
+            <div class="upload-hint">Podporované formáty: JPG, PNG, GIF, WebP</div>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+        
+        <button class="button" id="uploadBtn">Vybrať obrázok</button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Spracúvam obrázok...</div>
+        </div>
+        
+        <div class="status" id="status"></div>
+        
+        <div class="preview-section" id="previewSection">
+            <h3>Výsledok:</h3>
+            <div class="preview-images">
+                <div class="image-box">
+                    <div class="image-label">Originál</div>
+                    <img id="originalImage" src="" alt="Originál">
+                </div>
+                <div class="image-box">
+                    <div class="image-label">Bez pozadia</div>
+                    <img id="resultImage" src="" alt="Výsledok">
+                </div>
+            </div>
+            <a id="downloadBtn" class="download-btn" download="removed-bg.png">⬇️ Stiahnuť obrázok</a>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const loading = document.getElementById('loading');
+        const status = document.getElementById('status');
+        const previewSection = document.getElementById('previewSection');
+        const originalImage = document.getElementById('originalImage');
+        const resultImage = document.getElementById('resultImage');
+        const downloadBtn = document.getElementById('downloadBtn');
+        
+        const API_URL = 'https://bazos-rembg-server.railway.app/remove-bg';
+        
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                processFile();
+            }
+        });
+        
+        fileInput.addEventListener('change', processFile);
+        
+        function processFile() {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                originalImage.src = e.target.result;
+                uploadImage(file);
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        async function uploadImage(file) {
+            loading.style.display = 'block';
+            previewSection.classList.remove('active');
+            status.textContent = '';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const resultUrl = URL.createObjectURL(blob);
+                    resultImage.src = resultUrl;
+                    downloadBtn.href = resultUrl;
+                    previewSection.classList.add('active');
+                    status.className = 'status success';
+                    status.textContent = '✅ Pozadie bolo úspešne odstránené!';
+                } else {
+                    throw new Error('Chyba pri spracovaní obrázka');
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '❌ Chyba: ' + error.message;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
