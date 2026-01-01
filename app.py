@@ -10,8 +10,10 @@ app = Flask(__name__)
 def home():
     return send_file('index.html', mimetype='text/html')
 
-@app.route('/remove-bg', methods=['POST'])
+@app.route('/remove-bg', methods=['GET', 'POST'])
 def remove_background():
+        if request.method == 'GET':
+        return send_file('index.html', mimetype='text/html')
     try:
         # Kontrola či prišla fotka
         if 'image' not in request.files:
