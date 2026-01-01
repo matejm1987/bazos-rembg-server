@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsoni, render_template
 from rembg import remove
 from PIL import Image
 import io
@@ -8,15 +8,7 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def home():
-    return jsonify({
-        'status': 'online',
-        'service': 'Bazos REMBG API',
-        'version': '1.0',
-        'endpoints': {
-            '/remove-bg': 'POST - Upload image to remove background'
-        }
-    })
-
+    return render_template('index.html')        
 @app.route('/remove-bg', methods=['POST'])
 def remove_background():
     try:
